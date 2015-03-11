@@ -79,3 +79,4 @@ obj-$(CONFIG_GENERIC_BLN) += bln.o
 obj-$(CONFIG_GENERIC_BLN2)	+= bln2.o
 obj-$(CONFIG_VP_A2220) += a2220.o
 obj-$(CONFIG_PHANTOM_KP_FILTER) += phantom_kp_filter.o
+obj-$(CONFIG_UID_CPUTIME)	+= uid_cputime.o
