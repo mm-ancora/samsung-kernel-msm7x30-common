@@ -25,11 +25,9 @@
 #include <linux/earlysuspend.h>
 #endif
 #include <linux/miscdevice.h>
-#ifdef CONFIG_FB
+#ifdef CONFIG_GENERIC_BLN2
 #include <linux/notifier.h>
 #include <linux/fb.h>
-#endif
-#ifdef CONFIG_GENERIC_BLN2
 #include <linux/bln2.h>
 #endif
 
@@ -166,7 +164,7 @@ struct mcs8000_ts_driver {
 	struct input_info info;
 	int suspended;
 	atomic_t keypad_enable;
-#ifdef CONFIG_FB
+#ifdef CONFIG_GENERIC_BLN2
 	struct notifier_block fb_notif;
 #endif
 	struct early_suspend	early_suspend;
@@ -704,7 +702,7 @@ static ssize_t touch_led_control(struct device *dev, struct device_attribute *at
 	return size;
 }
 
-#ifdef CONFIG_FB
+#ifdef CONFIG_GENERIC_BLN2
 static int fb_notifier_callback(struct notifier_block *self,
 				unsigned long event, void *data)
 {
@@ -2319,7 +2317,7 @@ int melfas_mcs8000_ts_probe(struct i2c_client *client,
 	melfas_mcs8000_ts->client = client;
 	i2c_set_clientdata(client, melfas_mcs8000_ts);
 
-#ifdef CONFIG_FB
+#ifdef CONFIG_GENERIC_BLN2
 	melfas_mcs8000_ts->fb_notif.notifier_call = fb_notifier_callback;
 	rc = fb_register_client(&melfas_mcs8000_ts->fb_notif);
 	if (rc) {
@@ -2455,7 +2453,7 @@ int melfas_mcs8000_ts_probe(struct i2c_client *client,
 	return 0;
 err_input_register_device_failed:
 	input_free_device(melfas_mcs8000_ts->input_dev);
-#ifdef CONFIG_FB
+#ifdef CONFIG_GENERIC_BLN2
 err_cleanup_fb_notif:
 	fb_unregister_client(&melfas_mcs8000_ts->fb_notif);
 #endif
