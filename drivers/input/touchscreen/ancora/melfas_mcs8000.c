@@ -714,10 +714,15 @@ static int fb_notifier_callback(struct notifier_block *self,
 	if (evdata && evdata->data) {
 		if (event == FB_EVENT_BLANK) {
 			blank = evdata->data;
-			if (*blank == FB_BLANK_UNBLANK)
-				bln_state = TKEY_BLN_DISABLED;
-			else if (*blank == FB_BLANK_POWERDOWN)
-				bln_state = TKEY_BLN_ENABLED;
+			if (*blank == FB_BLANK_UNBLANK) {
+				if (led_state == TKEY_LED_ON) {
+					bln_state = TKEY_BLN_DISABLED;
+				}
+			} else if (*blank == FB_BLANK_POWERDOWN) {
+				if (led_state == TKEY_LED_OFF || led_state == TKEY_LED_FORCEDOFF) {
+					bln_state = TKEY_BLN_ENABLED;
+				}
+			}
 		}
 	}
 
@@ -2518,7 +2523,7 @@ int melfas_mcs8000_ts_suspend(pm_message_t mesg)
         printk("touch_led_control : ts_suspend forced off! rc = %d \n", rc);              
 
 		if (rc) 
-			pr_err("%s: LDO2 vreg disable failed (%d)\n", __func__, rc);		
+			pr_err("%s: LDO2 vreg disable failed (%d)\n", __func__, rc);	
         else 
             led_state = TKEY_LED_FORCEDOFF;
 	}
