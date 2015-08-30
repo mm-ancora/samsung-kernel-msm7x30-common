@@ -108,6 +108,10 @@
 
 void mcsdl_vdd_on(void);
 void mcsdl_vdd_off(void);
+#ifdef CONFIG_GENERIC_BLN2
+void bln_power_on_leds(void);
+void bln_power_off_leds(void;
+#endif
 
 #define GPIO_TOUCH_INT	119
 #define GPIO_I2C0_SCL   70
