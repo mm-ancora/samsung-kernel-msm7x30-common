@@ -25,6 +25,11 @@
 #include <linux/earlysuspend.h>
 #endif
 #include <linux/miscdevice.h>
+#ifdef CONFIG_GENERIC_BLN2
+#include <linux/notifier.h>
+#include <linux/fb.h>
+#include <linux/bln2.h>
+#endif
 
 #include <asm/io.h>
 #include <asm/gpio.h>
@@ -84,6 +89,20 @@ extern int mcsdl_ISC_download_binary_data_G2(void);
 
 extern struct class *sec_class;
 extern int board_hw_revision;
+
+#ifdef CONFIG_GENERIC_BLN2
+enum {
+	TKEY_BLN_ENABLED,
+	TKEY_BLN_DISABLED
+};
+static unsigned int bln_state = TKEY_BLN_DISABLED;
+
+enum {
+	BLN_LED_ON,
+	BLN_LED_OFF
+};
+static unsigned int bln_led_state = BLN_LED_OFF;
+#endif
 
 enum {
 	TKEY_LED_OFF,
@@ -145,6 +164,9 @@ struct mcs8000_ts_driver {
 	struct input_info info;
 	int suspended;
 	atomic_t keypad_enable;
+#ifdef CONFIG_GENERIC_BLN2
+	struct notifier_block fb_notif;
+#endif
 	struct early_suspend	early_suspend;
 };
 
@@ -240,6 +262,40 @@ static void poweroff_touch_timer_handler(unsigned long data)
 
 	poweroff_touch_timer.function = poweroff_touch_timer_handler2;
 	mod_timer(&poweroff_touch_timer,jiffies + 5*HZ);
+}
+#endif
+
+#ifdef CONFIG_GENERIC_BLN2
+void bln_power_on_leds(void)
+{
+	int rc;
+
+	if (bln_state == TKEY_BLN_ENABLED) {
+		rc = regulator_enable(vreg_ldo2);
+
+		if (rc) {
+			pr_err("%s: LDO2 vreg enable failed (%d)\n",
+			       __func__, rc);
+			return rc;
+		}
+
+		bln_led_state = BLN_LED_ON;
+	}
+}
+
+void bln_power_off_leds(void)
+{
+	int rc;
+
+	if (bln_led_state == BLN_LED_ON) {
+		rc = regulator_disable(vreg_ldo2);
+
+		if (rc) {
+			pr_err("%s: LDO2 vreg disable failed (%d)\n",
+				__func__, rc);
+			return rc;
+		}
+	}
 }
 #endif
 
@@ -576,6 +632,39 @@ static ssize_t tkey_noise_thd_show_mcs8000(struct device *dev, struct device_att
     return sprintf(buf, "0") ;
 }
 
+#ifdef CONFIG_GENERİC_BLN2
+static int led_bln_enable(int led_mask)
+{
+	bln_power_on_leds();
+	return 0;
+}
+
+static int led_bln_disable(int led_mask)
+{
+	bln_power_off_leds();
+	return 0;
+}
+
+static int led_bln_power_on(void)
+{
+	return 0;
+}
+
+static int led_bln_power_off(void)
+{
+	return 0;
+}
+
+static struct bln_implementation led_bln = {
+	.enable    = led_bln_enable,
+	.disable   = led_bln_disable,
+	.power_on  = led_bln_power_on,
+	.power_off = led_bln_power_off,
+	.led_count = 1
+};
+
+#endif
+
 static ssize_t touch_led_control(struct device *dev, struct device_attribute *attr, const char *buf, size_t size)
 {
 	u8 data = 0x10;
@@ -612,6 +701,35 @@ static ssize_t touch_led_control(struct device *dev, struct device_attribute *at
 
 	return size;
 }
+
+#ifdef CONFIG_GENERIC_BLN2
+static int fb_notifier_callback(struct notifier_block *self,
+				unsigned long event, void *data)
+{
+	struct fb_event *evdata = data;
+	int *blank;
+	struct mcs8000_ts_driver *ts =
+		container_of(self, struct mcs8000_ts_driver, fb_notif);
+
+	if (evdata && evdata->data) {
+		if (event == FB_EVENT_BLANK) {
+			blank = evdata->data;
+			if (*blank == FB_BLANK_UNBLANK) {
+				if (led_state == TKEY_LED_ON) {
+					bln_state = TKEY_BLN_DISABLED;
+				}
+			} else if (*blank == FB_BLANK_POWERDOWN) {
+				if (led_state == TKEY_LED_OFF || led_state == TKEY_LED_FORCEDOFF) {
+					bln_state = TKEY_BLN_ENABLED;
+				}
+			}
+		}
+	}
+
+	return 0;
+}
+#endif
+
 #ifdef QT_ATCOM_TEST
 
 static ssize_t key_threshold_show(struct device *dev, struct device_attribute *attr, char *buf)
@@ -2203,6 +2321,19 @@ int melfas_mcs8000_ts_probe(struct i2c_client *client,
 
 	melfas_mcs8000_ts->client = client;
 	i2c_set_clientdata(client, melfas_mcs8000_ts);
+
+#ifdef CONFIG_GENERIC_BLN2
+	melfas_mcs8000_ts->fb_notif.notifier_call = fb_notifier_callback;
+	rc = fb_register_client(&melfas_mcs8000_ts->fb_notif);
+	if (rc) {
+		pr_err("failed to register fb_notifier \n");
+		goto err_cleanup_fb_notif;
+	}
+#endif
+
+#ifdef CONFIG_GENERIC_BLN2
+	register_bln_implementation(&led_bln);
+#endif
          
     for(i=0; i<5; i++) {
         if(0 == melfas_mcs8000_read_version()) {
@@ -2327,7 +2458,10 @@ int melfas_mcs8000_ts_probe(struct i2c_client *client,
 	return 0;
 err_input_register_device_failed:
 	input_free_device(melfas_mcs8000_ts->input_dev);
-
+#ifdef CONFIG_GENERIC_BLN2
+err_cleanup_fb_notif:
+	fb_unregister_client(&melfas_mcs8000_ts->fb_notif);
+#endif
 err_input_dev_alloc_failed:
 	kfree(melfas_mcs8000_ts);
 err_check_functionality_failed:
@@ -2389,7 +2523,7 @@ int melfas_mcs8000_ts_suspend(pm_message_t mesg)
         printk("touch_led_control : ts_suspend forced off! rc = %d \n", rc);              
 
 		if (rc) 
-			pr_err("%s: LDO2 vreg disable failed (%d)\n", __func__, rc);		
+			pr_err("%s: LDO2 vreg disable failed (%d)\n", __func__, rc);	
         else 
             led_state = TKEY_LED_FORCEDOFF;
 	}
