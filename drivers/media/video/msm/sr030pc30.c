@@ -104,9 +104,6 @@ static inline int lp8720_i2c_write(unsigned char addr, unsigned char data)
     int rc;
     unsigned char buf[2];
 
-  //  if(!lp8720_init)
-  //      return -EIO;
-
     struct i2c_msg msg = {
         .addr = lp8720_i2c_client->addr,
         .flags = 0,
@@ -148,14 +145,12 @@ int sr030pc30_i2c_tx_data(char* txData, int length)
 #if 1
 static int sr030pc30_i2c_read(unsigned short subaddr, unsigned short *data)
 {
-	//printk("<=ASWOOGI=> sr030pc30_i2c_read\n");
 
 	int ret;
 	unsigned char buf[1] = {0};
 	struct i2c_msg msg = { sr030pc30_client->addr, 0, 1, buf };
 	
 	buf[0] = subaddr;
-//	buf[1] = 0x0;
 
 	ret = i2c_transfer(sr030pc30_client->adapter, &msg, 1) == 1 ? 0 : -EIO;
 	if (ret == -EIO) 
@@ -167,15 +162,10 @@ static int sr030pc30_i2c_read(unsigned short subaddr, unsigned short *data)
 	if (ret == -EIO) 
 		goto error;
 
-//	*data = ((buf[0] << 8) | buf[1]);
 	*data = buf[0];
 
 error:
-	//printk("[ASWOOGI] on read func  sr030pc30_client->addr : %x\n",  sr130pc10_client->addr);    
-	//printk("[ASWOOGI] on read func  subaddr : %x\n", subaddr);
-	//printk("[ASWOOGI] on read func  data : %x\n", data);
 
-    
 	return ret;
 }
 
@@ -333,7 +323,6 @@ void sr030pc30_regs_table_init(void)
     char *dp;
     long l;
     loff_t pos;
-//    int i;
     int ret;
     mm_segment_t fs = get_fs();
 
@@ -521,17 +510,7 @@ static void sr030pc30_set_power_rev00( int onoff)
         gpio_set_value(CAM_VGA_STANDBY, 1);
         
         mdelay(5); // >4ms
-#if 0
-        CAMDRV_DEBUG("MCLK 24Mhz Enabled \n");   
-        msm_camio_clk_rate_set(24000000);
-    
-        msm_camio_camif_pad_reg_reset();
-        
-        udelay(1);        
 
-        CAMDRV_DEBUG("MCLK High \n");
-        gpio_tlmm_config(GPIO_CFG(15, 1, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA), GPIO_CFG_ENABLE);
-#endif
         /* Enable MCLK */
         CAMDRV_DEBUG("MCLK High \n");
         gpio_tlmm_config(mclk_cfg, GPIO_CFG_ENABLE);
@@ -673,17 +652,6 @@ static void sr030pc30_set_power_rev01( int onoff)
         gpio_set_value(CAM_VGA_STANDBY, 1);
         
         mdelay(5); // >4ms
-#if 0
-        CAMDRV_DEBUG("MCLK 24Mhz Enabled \n");   
-        msm_camio_clk_rate_set(24000000);
-    
-        msm_camio_camif_pad_reg_reset();
-        
-        udelay(1);        
-
-        CAMDRV_DEBUG("MCLK High \n");
-        gpio_tlmm_config(GPIO_CFG(15, 1, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA), GPIO_CFG_ENABLE);
-#endif
 
         /* Enable MCLK */
         CAMDRV_DEBUG("MCLK High \n");
@@ -770,23 +738,32 @@ static void sr030pc30_set_power(int onoff)
 #else
 void sr030pc30_set_power(int onoff)
 {
-    unsigned int mclk_cfg; 
+    unsigned int mclk_cfg;
+	int ret, rc;
     struct regulator *vreg_ldo20, *vreg_ldo11;
 
     vreg_ldo20 = regulator_get(NULL, "gp13");
     if (!vreg_ldo20) {
         printk("[S5K4ECGX]%s: VREG L20 get failed\n", __func__);
     }
-    if (regulator_set_voltage(vreg_ldo20, 1800000 ,1800000)) {
+	
+	ret = regulator_set_voltage(vreg_ldo20, 1800000 ,1800000);
+    if (ret) {
         printk("[S5K4ECGX]%s: vreg_set_level failed\n", __func__);
+		
+		return ret;
     }
 
     vreg_ldo11 = regulator_get(NULL, "gp2");
     if (!vreg_ldo11) {
         printk("[S5K4ECGX]%s: VREG L11 get failed\n", __func__);
     }
-    if (regulator_set_voltage(vreg_ldo11, 2800000 ,2800000)) {
-        printk("[S5K4ECGX]%s: vreg_set_level failed\n", __func__);    
+	
+	ret = regulator_set_voltage(vreg_ldo11, 2800000 ,2800000);
+    if (ret) {
+        printk("[S5K4ECGX]%s: vreg_set_level failed\n", __func__);
+
+		return ret;
     }
     
     if(onoff)
@@ -805,11 +782,18 @@ void sr030pc30_set_power(int onoff)
         gpio_set_value(CAM_FLASH_ENSET, 0);
         gpio_set_value(CAM_FLASH_FLEN, 0);  
         
-        if (regulator_enable(vreg_ldo20)) {
-            printk("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!![SR030PC300]%s: reg_enable failed\n", __func__);
+		rc = regulator_enable(vreg_ldo20);
+        if (rc) {
+            printk("!!![SR030PC300]%s: reg_enable failed\n", __func__);
+			
+			return rc;
         }
-        if (regulator_enable(vreg_ldo11)) {
-            printk("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!![SR030PC300]%s: reg_enable failed\n", __func__);
+		
+		rc = regulator_enable(vreg_ldo11);
+        if (rc) {
+            printk("!!![SR030PC300]%s: reg_enable failed\n", __func__);
+			
+			return rc;
         }
         mdelay(1);
         
@@ -840,11 +824,18 @@ void sr030pc30_set_power(int onoff)
         gpio_set_value(31, 0);    // VGA_STBY
         mdelay(1);
 
-        if (regulator_disable(vreg_ldo11)) {
-            printk("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!![SR030PC300]%s: reg_disable failed\n", __func__);
-        }        
-        if (regulator_disable(vreg_ldo20)) {
-            printk("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!![SR030PC300]%s: reg_disable failed\n", __func__);
+		rc = regulator_disable(vreg_ldo11);
+        if (rc) {
+            printk("!!![SR030PC300]%s: reg_disable failed\n", __func__);
+			
+			return rc;
+        }
+
+		rc = regulator_disable(vreg_ldo20);
+        if (rc) {
+            printk("!!![SR030PC300]%s: reg_disable failed\n", __func__);
+			
+			return rc;
         }
         mdelay(1);
     }
@@ -858,7 +849,7 @@ void sr030pc30_set_power(int onoff)
 void sr030pc30_set_preview(void)
 {
     // If preview registers are already set, return. No need to write preview registers again.
-    #ifdef CONFIG_SENSOR_SR030PC30_T679
+#ifdef CONFIG_SENSOR_SR030PC30_T679
         if(mPreviewRegistersSet)
         {
             CAMDRV_DEBUG(" mPreviewRegistersSet=%d. Preview registers not changed. Returning...\n", mPreviewRegistersSet);
@@ -866,7 +857,7 @@ void sr030pc30_set_preview(void)
         }
 
         mPreviewRegistersSet = 1;   // Setting preview registers for the 1st time. Set this flag to 1.
-    #endif
+#endif
 
     if(prev_vtcall_mode==sr030pc30_ctrl->vtcall_mode)
         return;
@@ -928,7 +919,7 @@ static long sr030pc30_set_sensor_mode(int mode)
             break;
         case SENSOR_SNAPSHOT_TRANSFER:
             printk(KERN_ERR "[CAMDRV/SR030PC300] SENSOR_SNAPSHOT_TRANSFER START\n");
-        sr030pc30_set_snapshot();
+			sr030pc30_set_snapshot();
             break;
         default:
             return -EFAULT;
@@ -954,9 +945,9 @@ static int sr030pc30_reset(void)
     printk(KERN_ERR "[CAMDRV/SR030PC300] sr030pc30_reset");
 
     sr030pc30_set_power(0);
-    mdelay(5);
+    mdelay(7);
     sr030pc30_set_power(1);
-    mdelay(5);
+    mdelay(7);
     return 0;
 }
 
@@ -1070,15 +1061,9 @@ static int sr030pc30_set_fps(unsigned int mode)
     if(g_bfps_set)
         return 0;
 
-    if(mode == EXT_CFG_FRAME_FIX_15)
+    if(mode == EXT_CFG_FRAME_FIX_15 || mode == EXT_CFG_FRAME_FIX_20)
     {
         SR030PC30_WRITE_LIST(sr030pc30_fps_15);
- 
-    }
-    else if(mode == EXT_CFG_FRAME_FIX_20)
-    {
-        SR030PC30_WRITE_LIST(sr030pc30_fps_15);
-//        SR030PC30_WRITE_LIST(sr030pc30_QVGA_fps_20);
     }
     else
     { 
@@ -1337,12 +1322,9 @@ int sr030pc30_sensor_ext_config(void __user *argp)
             prev_vtcall_mode=-1;
             printk(KERN_ERR "[SR030PC300]:EXT_CFG_TEST_ESD Sensor Reset\n");
             sr030pc30_set_power(0);
-            msleep(5);
-
-//            msm_camio_camif_pad_reg_reset();
-                
+            msleep(7); 
             sr030pc30_set_power(1);			
-            msleep(5);
+            msleep(7);
             sr030pc30_set_preview();		
           
           }
@@ -1378,7 +1360,6 @@ int sr030pc30_sensor_config(void __user *argp)
     switch (cfg_data.cfgtype) {
     case CFG_SET_MODE:
         rc = sr030pc30_set_sensor_mode(cfg_data.mode);
-         //sr030pc30_set_ev(cur_ev_value);
         break;
 
     case CFG_SET_EFFECT:
@@ -1446,7 +1427,6 @@ static int __exit sr030pc30_i2c_remove(struct i2c_client *client)
 {
     struct sr030pc30_work_t *sensorw = i2c_get_clientdata(client);
     free_irq(client->irq, sensorw);
-    //i2c_detach_client(client);
     sr030pc30_client = NULL;
     sr030pc30_sensorw = NULL;
     kfree(sensorw);
@@ -1509,17 +1489,6 @@ int sr030pc30_sensor_probe(const struct msm_camera_sensor_info *info,    struct 
     if (rc < 0)
         goto probe_fail;
 
-#if 0
-    /* Input MCLK = 24MHz */
-    msm_camio_clk_rate_set(24000000);
-    mdelay(5);
-#endif    
-
- //   if (!lp8720_init){
-    //    rc = -EIO;
-   //     goto probe_fail;
- //   }
-
 // /sys/devices/virtual/sec/sec_cam                                                                            
     if (sec_cam_dev == NULL)                                                          
     {                                                                                 
@@ -1535,7 +1504,9 @@ int sr030pc30_sensor_probe(const struct msm_camera_sensor_info *info,    struct 
     }
 
     sr030pc30_set_power(1);
+	mdelay(5);
     rc=sr030pc30_start();
+	mdelay(5);
     sr030pc30_set_power(0);
     if (rc < 0)
     {

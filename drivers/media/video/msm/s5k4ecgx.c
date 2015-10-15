@@ -2240,22 +2240,31 @@ void cam_pw(int status)
 void s5k4ecgx_set_power(int status)
 {
     unsigned int mclk_cfg;
+	int ret, rc;
     struct regulator *vreg_ldo20, *vreg_ldo11;
 
     vreg_ldo20 = regulator_get(NULL, "gp13");
     if(!vreg_ldo20){
         printk("[S5K4ECGX]%s: VREG L20 get failed\n", __func__);
     }
-    if(regulator_set_voltage(vreg_ldo20, 1800000 ,1800000)){
+	
+	ret = regulator_set_voltage(vreg_ldo20, 1800000 ,1800000);
+    if(ret){
         printk("[S5K4ECGX]%s: vreg_set_level failed\n", __func__);
+		
+		return ret;
     }
 
     vreg_ldo11 = regulator_get(NULL, "gp2");
     if (!vreg_ldo11) {
         printk("[S5K4ECGX]%s: VREG L11 get failed\n", __func__);
     }
-    if (regulator_set_voltage(vreg_ldo11, 2800000 ,2800000)) {
-        printk("[S5K4ECGX]%s: vreg_set_level failed\n", __func__);    
+	
+	ret = regulator_set_voltage(vreg_ldo11, 2800000 ,2800000);
+    if (ret) {
+        printk("[S5K4ECGX]%s: vreg_set_level failed\n", __func__);
+		
+		return ret;
     }    
 
     if(status == 1) //POWER ON
@@ -2273,11 +2282,16 @@ void s5k4ecgx_set_power(int status)
         gpio_set_value(31, 0);  // CAM_VT_nSTBY
         gpio_set_value(132, 0); // CAM_VT_nRST
 
-        if (regulator_enable(vreg_ldo20)) {
-            printk("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!![S5K4ECGX]%s: reg_enable failed\n", __func__);
+		rc = regulator_enable(vreg_ldo20);
+        if (rc) {
+            printk("!!![S5K4ECGX]%s: reg_enable failed\n", __func__);
         }
-        if (regulator_enable(vreg_ldo11)) {
-            printk("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!![S5K4ECGX]%s: reg_enable failed\n", __func__);
+		
+		rc = regulator_enable(vreg_ldo11);
+        if (rc) {
+            printk("!!![S5K4ECGX]%s: reg_enable failed\n", __func__);
+			
+			return rc;
         }
         mdelay(1);        
         /* Enable CAM_VT_nSTBY */
@@ -2417,11 +2431,18 @@ void s5k4ecgx_set_power(int status)
         lp8720_i2c_write(0x08, 0x00);
         gpio_set_value(2, 0);        // lp8720 disable
 
-        if (regulator_disable(vreg_ldo11)) {
-            printk("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!![S5K4ECGX]%s: reg_disable failed\n", __func__);
-        }        
-        if (regulator_disable(vreg_ldo20)) {
-            printk("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!![S5K4ECGX]%s: reg_disable failed\n", __func__);
+		rc = regulator_disable(vreg_ldo11);
+        if (rc) {
+            printk("!!![S5K4ECGX]%s: reg_disable failed\n", __func__);
+			
+			return rc;
+        }
+		
+		rc = regulator_disable(vreg_ldo20);
+        if (rc) {
+            printk("!!![S5K4ECGX]%s: reg_disable failed\n", __func__);
+			
+			return rc;
         }
         
         mdelay(1);
