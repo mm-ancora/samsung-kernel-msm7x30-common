@@ -739,7 +739,7 @@ static void sr030pc30_set_power(int onoff)
 void sr030pc30_set_power(int onoff)
 {
     unsigned int mclk_cfg;
-	int ret, rc;
+    int ret, rc;
     struct regulator *vreg_ldo20, *vreg_ldo11;
 
     vreg_ldo20 = regulator_get(NULL, "gp13");
@@ -747,11 +747,11 @@ void sr030pc30_set_power(int onoff)
         printk("[S5K4ECGX]%s: VREG L20 get failed\n", __func__);
     }
 	
-	ret = regulator_set_voltage(vreg_ldo20, 1800000 ,1800000);
+    ret = regulator_set_voltage(vreg_ldo20, 1800000 ,1800000);
     if (ret) {
         printk("[S5K4ECGX]%s: vreg_set_level failed\n", __func__);
 		
-		return ret;
+	return ret;
     }
 
     vreg_ldo11 = regulator_get(NULL, "gp2");
@@ -759,11 +759,11 @@ void sr030pc30_set_power(int onoff)
         printk("[S5K4ECGX]%s: VREG L11 get failed\n", __func__);
     }
 	
-	ret = regulator_set_voltage(vreg_ldo11, 2800000 ,2800000);
+    ret = regulator_set_voltage(vreg_ldo11, 2800000 ,2800000);
     if (ret) {
         printk("[S5K4ECGX]%s: vreg_set_level failed\n", __func__);
 
-		return ret;
+	return ret;
     }
     
     if(onoff)
@@ -782,18 +782,18 @@ void sr030pc30_set_power(int onoff)
         gpio_set_value(CAM_FLASH_ENSET, 0);
         gpio_set_value(CAM_FLASH_FLEN, 0);  
         
-		rc = regulator_enable(vreg_ldo20);
+	rc = regulator_enable(vreg_ldo20);
         if (rc) {
             printk("!!![SR030PC300]%s: reg_enable failed\n", __func__);
 			
-			return rc;
+	    return rc;
         }
 		
-		rc = regulator_enable(vreg_ldo11);
+	rc = regulator_enable(vreg_ldo11);
         if (rc) {
             printk("!!![SR030PC300]%s: reg_enable failed\n", __func__);
 			
-			return rc;
+	    return rc;
         }
         mdelay(1);
         
@@ -824,18 +824,18 @@ void sr030pc30_set_power(int onoff)
         gpio_set_value(31, 0);    // VGA_STBY
         mdelay(1);
 
-		rc = regulator_disable(vreg_ldo11);
+	rc = regulator_disable(vreg_ldo11);
         if (rc) {
             printk("!!![SR030PC300]%s: reg_disable failed\n", __func__);
 			
-			return rc;
+	    return rc;
         }
 
-		rc = regulator_disable(vreg_ldo20);
+	rc = regulator_disable(vreg_ldo20);
         if (rc) {
             printk("!!![SR030PC300]%s: reg_disable failed\n", __func__);
 			
-			return rc;
+	    return rc;
         }
         mdelay(1);
     }
