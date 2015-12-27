@@ -162,7 +162,7 @@ static struct dbs_tuners {
 #ifdef CONFIG_MACH_ANCORA_TMO
 	.boostfreq = 1024000,
 #else
-	.boostfreq = 1401600,
+	.boostfreq = 1804800,
 #endif
 };
 
