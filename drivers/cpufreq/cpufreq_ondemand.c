@@ -1149,7 +1149,6 @@ bail_acq_sema_failed:
 	return;
 }
 
-#if 0
 static void dbs_input_event(struct input_handle *handle, unsigned int type,
 		unsigned int code, int value)
 {
@@ -1208,14 +1207,12 @@ static void dbs_input_disconnect(struct input_handle *handle)
 	input_unregister_handle(handle);
 	kfree(handle);
 }
-#endif
 
 static const struct input_device_id dbs_ids[] = {
 	{ .driver_info = 1 },
 	{ },
 };
 
-#if 0
 static struct input_handler dbs_input_handler = {
 	.event		= dbs_input_event,
 	.connect	= dbs_input_connect,
@@ -1223,7 +1220,6 @@ static struct input_handler dbs_input_handler = {
 	.name		= "cpufreq_ond",
 	.id_table	= dbs_ids,
 };
-#endif
 
 static int cpufreq_governor_dbs(struct cpufreq_policy *policy,
 				   unsigned int event)
@@ -1289,10 +1285,8 @@ static int cpufreq_governor_dbs(struct cpufreq_policy *policy,
 			if (dbs_tuners_ins.sync_freq == 0)
 				dbs_tuners_ins.sync_freq = policy->min;
 		}
-#if 0
 		if (!cpu)
 			rc = input_register_handler(&dbs_input_handler);
-#endif
 		mutex_unlock(&dbs_mutex);
 
 
@@ -1311,10 +1305,8 @@ static int cpufreq_governor_dbs(struct cpufreq_policy *policy,
 		/* If device is being removed, policy is no longer
 		 * valid. */
 		this_dbs_info->cur_policy = NULL;
-#if 0
 		if (!cpu)
 			input_unregister_handler(&dbs_input_handler);
-#endif
 		if (!dbs_enable)
 			sysfs_remove_group(cpufreq_global_kobject,
 					   &dbs_attr_group);
