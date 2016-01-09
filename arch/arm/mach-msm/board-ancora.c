@@ -893,15 +893,15 @@ static int pm8058_pwm_config(struct pwm_device *pwm, int ch, int on)
 		break;
 
 	case 4:
-		id = PM_PWM_LED_1;
+		id = PM_PWM_LED_0;
 		mode = PM_PWM_CONF_PWM1;
-		max_mA = 2;
+		max_mA = 40;
 		break;
 
 	case 5:
 		id = PM_PWM_LED_2;
 		mode = PM_PWM_CONF_PWM2;
-		max_mA = 2;
+		max_mA = 40;
 		break;
 
 	case 6:
@@ -945,6 +945,130 @@ static int pm8058_pwm_enable(struct pwm_device *pwm, int ch, int on)
 	}
 	return rc;
 }
+
+static const unsigned int fluid_keymap[] = {
+	KEY(0, 0, KEY_7),
+	KEY(0, 1, KEY_ENTER),
+	KEY(0, 2, KEY_UP),
+	/* drop (0,3) as it always shows up in pair with(0,2) */
+	KEY(0, 4, KEY_DOWN),
+
+	KEY(1, 0, KEY_CAMERA_SNAPSHOT),
+	KEY(1, 1, KEY_SELECT),
+	KEY(1, 2, KEY_1),
+	KEY(1, 3, KEY_VOLUMEUP),
+	KEY(1, 4, KEY_VOLUMEDOWN),
+};
+
+static const unsigned int surf_keymap[] = {
+	KEY(0, 0, KEY_7),
+	KEY(0, 1, KEY_DOWN),
+	KEY(0, 2, KEY_UP),
+	KEY(0, 3, KEY_RIGHT),
+	KEY(0, 4, KEY_ENTER),
+	KEY(0, 5, KEY_L),
+	KEY(0, 6, KEY_BACK),
+	KEY(0, 7, KEY_M),
+
+	KEY(1, 0, KEY_LEFT),
+	KEY(1, 1, KEY_SEND),
+	KEY(1, 2, KEY_1),
+	KEY(1, 3, KEY_4),
+	KEY(1, 4, KEY_CLEAR),
+	KEY(1, 5, KEY_MSDOS),
+	KEY(1, 6, KEY_SPACE),
+	KEY(1, 7, KEY_COMMA),
+
+	KEY(2, 0, KEY_6),
+	KEY(2, 1, KEY_5),
+	KEY(2, 2, KEY_8),
+	KEY(2, 3, KEY_3),
+	KEY(2, 4, KEY_NUMERIC_STAR),
+	KEY(2, 5, KEY_UP),
+	KEY(2, 6, KEY_DOWN), /* SYN */
+	KEY(2, 7, KEY_LEFTSHIFT),
+
+	KEY(3, 0, KEY_9),
+	KEY(3, 1, KEY_NUMERIC_POUND),
+	KEY(3, 2, KEY_0),
+	KEY(3, 3, KEY_2),
+	KEY(3, 4, KEY_SLEEP),
+	KEY(3, 5, KEY_F1),
+	KEY(3, 6, KEY_F2),
+	KEY(3, 7, KEY_F3),
+
+	KEY(4, 0, KEY_BACK),
+	KEY(4, 1, KEY_HOME),
+	KEY(4, 2, KEY_MENU),
+	KEY(4, 3, KEY_VOLUMEUP),
+	KEY(4, 4, KEY_VOLUMEDOWN),
+	KEY(4, 5, KEY_F4),
+	KEY(4, 6, KEY_F5),
+	KEY(4, 7, KEY_F6),
+
+	KEY(5, 0, KEY_R),
+	KEY(5, 1, KEY_T),
+	KEY(5, 2, KEY_Y),
+	KEY(5, 3, KEY_LEFTALT),
+	KEY(5, 4, KEY_KPENTER),
+	KEY(5, 5, KEY_Q),
+	KEY(5, 6, KEY_W),
+	KEY(5, 7, KEY_E),
+
+	KEY(6, 0, KEY_F),
+	KEY(6, 1, KEY_G),
+	KEY(6, 2, KEY_H),
+	KEY(6, 3, KEY_CAPSLOCK),
+	KEY(6, 4, KEY_PAGEUP),
+	KEY(6, 5, KEY_A),
+	KEY(6, 6, KEY_S),
+	KEY(6, 7, KEY_D),
+
+	KEY(7, 0, KEY_V),
+	KEY(7, 1, KEY_B),
+	KEY(7, 2, KEY_N),
+	KEY(7, 3, KEY_MENU), /* REVISIT - SYM */
+	KEY(7, 4, KEY_PAGEDOWN),
+	KEY(7, 5, KEY_Z),
+	KEY(7, 6, KEY_X),
+	KEY(7, 7, KEY_C),
+
+	KEY(8, 0, KEY_P),
+	KEY(8, 1, KEY_J),
+	KEY(8, 2, KEY_K),
+	KEY(8, 3, KEY_INSERT),
+	KEY(8, 4, KEY_LINEFEED),
+	KEY(8, 5, KEY_U),
+	KEY(8, 6, KEY_I),
+	KEY(8, 7, KEY_O),
+
+	KEY(9, 0, KEY_4),
+	KEY(9, 1, KEY_5),
+	KEY(9, 2, KEY_6),
+	KEY(9, 3, KEY_7),
+	KEY(9, 4, KEY_8),
+	KEY(9, 5, KEY_1),
+	KEY(9, 6, KEY_2),
+	KEY(9, 7, KEY_3),
+
+	KEY(10, 0, KEY_F7),
+	KEY(10, 1, KEY_F8),
+	KEY(10, 2, KEY_F9),
+	KEY(10, 3, KEY_F10),
+	KEY(10, 4, KEY_FN),
+	KEY(10, 5, KEY_9),
+	KEY(10, 6, KEY_0),
+	KEY(10, 7, KEY_DOT),
+
+	KEY(11, 0, KEY_LEFTCTRL),
+	KEY(11, 1, KEY_F11),  /* START */
+	KEY(11, 2, KEY_ENTER),
+	KEY(11, 3, KEY_SEARCH),
+	KEY(11, 4, KEY_DELETE),
+	KEY(11, 5, KEY_RIGHT),
+	KEY(11, 6, KEY_LEFT),
+	KEY(11, 7, KEY_RIGHTSHIFT),
+};
 
 static const unsigned int ancora_keymap[] = {
 	KEY(0, 0, KEY_RESERVED),
@@ -992,6 +1116,52 @@ static struct pmic8058_led pmic8058_ffa_leds[] = {
 static struct pmic8058_leds_platform_data pm8058_ffa_leds_data = {
 	.num_leds = ARRAY_SIZE(pmic8058_ffa_leds),
 	.leds	= pmic8058_ffa_leds,
+};
+
+static struct pmic8058_led pmic8058_surf_leds[] = {
+	[0] = {
+		.name		= "keyboard-backlight",
+		.max_brightness = 15,
+		.id		= PMIC8058_ID_LED_KB_LIGHT,
+	},
+	[1] = {
+		.name		= "voice:red",
+		.max_brightness = 20,
+		.id		= PMIC8058_ID_LED_0,
+	},
+	[2] = {
+		.name		= "wlan:green",
+		.max_brightness = 20,
+		.id		= PMIC8058_ID_LED_2,
+	},
+};
+
+static struct pmic8058_leds_platform_data pm8058_surf_leds_data = {
+	.num_leds = ARRAY_SIZE(pmic8058_surf_leds),
+	.leds	= pmic8058_surf_leds,
+};
+
+static struct pmic8058_led pmic8058_fluid_leds[] = {
+	[0] = {
+		.name		= "keyboard-backlight",
+		.max_brightness = 15,
+		.id		= PMIC8058_ID_LED_KB_LIGHT,
+	},
+	[1] = {
+		.name		= "flash:led_0",
+		.max_brightness = 15,
+		.id		= PMIC8058_ID_FLASH_LED_0,
+	},
+	[2] = {
+		.name		= "flash:led_1",
+		.max_brightness = 15,
+		.id		= PMIC8058_ID_FLASH_LED_1,
+	},
+};
+
+static struct pmic8058_leds_platform_data pm8058_fluid_leds_data = {
+	.num_leds = ARRAY_SIZE(pmic8058_fluid_leds),
+	.leds	= pmic8058_fluid_leds,
 };
 
 static struct pm8xxx_irq_platform_data pm8xxx_irq_pdata = {
@@ -1345,7 +1515,7 @@ struct msm_camera_device_platform_data msm_camera_device_data = {
 	.ioext.csisz  = 0x00000400,
 	.ioext.csiirq = INT_CSI,
 	.ioclk.mclk_clk_rate = 24000000,
-	.ioclk.vfe_clk_rate  = 147456000,
+	.ioclk.vfe_clk_rate  = 122880000,
 };
 
 static struct msm_camera_sensor_flash_src msm_flash_src_pwm = {
@@ -4405,34 +4575,34 @@ static struct msm_panel_common_pdata mdp_pdata = {
 };
 
 static struct msm_gpio lcd_panel_gpios[] = {
-         GPIO_CFG(18, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA),
-         GPIO_CFG(19, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA),
-         GPIO_CFG(20, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA),
-         GPIO_CFG(21, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA),
-         GPIO_CFG(22, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA),
-         GPIO_CFG(23, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA),
-         GPIO_CFG(24, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA),
-         GPIO_CFG(25, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA),
-         GPIO_CFG(90, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_8MA),
-         GPIO_CFG(91, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA),
-         GPIO_CFG(92, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA),
-         GPIO_CFG(93, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA),
-         GPIO_CFG(94, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA),
-         GPIO_CFG(95, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA),
-         GPIO_CFG(96, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA),
-         GPIO_CFG(97, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA),
-         GPIO_CFG(98, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA),
-         GPIO_CFG(99, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA),
-         GPIO_CFG(100, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA),
-         GPIO_CFG(101, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA),
-         GPIO_CFG(102, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA),
-         GPIO_CFG(103, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA),
-         GPIO_CFG(104, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA),
-         GPIO_CFG(105, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA),
-         GPIO_CFG(106, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA),
-         GPIO_CFG(107, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA),
-         GPIO_CFG(108, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA),
-         GPIO_CFG(109, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_4MA),
+         GPIO_CFG(18, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA),
+         GPIO_CFG(19, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA),
+         GPIO_CFG(20, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA),
+         GPIO_CFG(21, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA),
+         GPIO_CFG(22, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA),
+         GPIO_CFG(23, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA),
+         GPIO_CFG(24, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA),
+         GPIO_CFG(25, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA),
+         GPIO_CFG(90, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA),
+         GPIO_CFG(91, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA),
+         GPIO_CFG(92, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA),
+         GPIO_CFG(93, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA),
+         GPIO_CFG(94, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA),
+         GPIO_CFG(95, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA),
+         GPIO_CFG(96, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA),
+         GPIO_CFG(97, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA),
+         GPIO_CFG(98, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA),
+         GPIO_CFG(99, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA),
+         GPIO_CFG(100, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA),
+         GPIO_CFG(101, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA),
+         GPIO_CFG(102, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA),
+         GPIO_CFG(103, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA),
+         GPIO_CFG(104, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA),
+         GPIO_CFG(105, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA),
+         GPIO_CFG(106, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA),
+         GPIO_CFG(107, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA),
+         GPIO_CFG(108, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA),
+         GPIO_CFG(109, 1, GPIO_CFG_OUTPUT,  GPIO_CFG_NO_PULL, GPIO_CFG_2MA),
 };
 
 static struct msm_gpio lcd_panel_gpios_sleep_cfg[] = {
@@ -5686,7 +5856,7 @@ static struct mmc_platform_data msm7x30_sdc1_data = {
 	.register_status_notify = wlan_register_status_notify,
 	.msmsdcc_fmin	= 144000,
 	.msmsdcc_fmid	= 24576000,
-	.msmsdcc_fmax	= 49152000,
+	.msmsdcc_fmax	= 24576000,
 	.nonremovable	= 0,
 };
 #endif
@@ -5948,7 +6118,12 @@ static struct msm_tsif_platform_data tsif_platform_data = {
 
 static void __init pmic8058_leds_init(void)
 {
-	pm8058_7x30_data.leds_pdata = &pm8058_ffa_leds_data;
+	if (machine_is_msm7x30_surf())
+		pm8058_7x30_data.leds_pdata = &pm8058_surf_leds_data;
+	else if (!machine_is_msm7x30_fluid())
+		pm8058_7x30_data.leds_pdata = &pm8058_ffa_leds_data;
+	else if (machine_is_msm7x30_fluid())
+		pm8058_7x30_data.leds_pdata = &pm8058_fluid_leds_data;
 }
 
 static struct msm_spm_platform_data msm_spm_data __initdata = {
@@ -6449,7 +6624,7 @@ static void __init msm7x30_init(void)
 	msm_pm_set_platform_data(msm_pm_data, ARRAY_SIZE(msm_pm_data));
 	BUG_ON(msm_pm_boot_init(&msm_pm_boot_pdata));
 	msm_pm_register_irqs();
-	msm_device_i2c_init();
+//	msm_device_i2c_init();
 	msm_device_i2c_2_init();
 #if defined(CONFIG_USE_QUP_I2C)
 	qup_device_i2c_init();
